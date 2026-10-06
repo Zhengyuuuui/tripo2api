@@ -304,6 +304,16 @@ tripo2api/
 
 ---
 
+## 贡献约定
+
+提交前请看 [`CONTRIBUTING.md`](CONTRIBUTING.md)。要点：
+
+- commit message **不加** `Co-Authored-By: Claude ...` trailer
+- 提交前跑一次凭证检查（见 CONTRIBUTING）
+- 控制台改动后用 `node --check` 验 JS 语法
+
+---
+
 ## 安全说明
 
 - `config.json` / `accounts.json` / `data/` **已 gitignore**，不要提交。
