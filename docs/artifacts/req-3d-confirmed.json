@@ -1,0 +1,80 @@
+{
+ "VERDICT": "3D GENERATION WORKS ON FREE/basic ACCOUNT - earlier 'paywall' conclusion was WRONG",
+ "root_cause_of_earlier_error": "I probed text_to_model with a guessed body. text_to_model IS member-gated (403 6102) and the UI ships no prompt box. But image_to_model is NOT gated - it is the only generation path the free UI exposes.",
+ "submit_request": {
+  "method": "POST",
+  "path": "/v2/studio/operation/image_to_model",
+  "body": {
+   "face_limit": 2000000,
+   "quad": false,
+   "visibility": "public",
+   "model_version": "v3.1-20260211",
+   "generate_parts": false,
+   "smart_poly": false,
+   "texture": true,
+   "delight": false,
+   "pbr": true,
+   "texture_alignment": "original_image",
+   "texture_quality": "detailed",
+   "enable_image_autofix": false,
+   "geometry_quality": "detailed",
+   "image": {
+    "bucket": "tripo-data",
+    "image_audit_result": "pass",
+    "image_source": "upload",
+    "key": "tripo-studio/20261005/6d7ff26d-a69d-41c0-a6c2-714b73a3eef2/input.png"
+   }
+  }
+ },
+ "upload_flow": [
+  "POST /v2/studio/storage/temporary_token  {client:'aws',format:'png'}  -> presigned S3 PUT",
+  "POST /v2/studio/audit/image  {image:{bucket,key}} -> image_audit_result:'pass' (REQUIRED field in submit body)"
+ ],
+ "polling": {
+  "endpoint": "POST /v2/studio/progress  {ids:[operator_id]}",
+  "response": "{status:'running'|'success'|'failed', progress:int, left_time:int, point_cloud_model_url}",
+  "observed": "0->100% over ~5.5min; stalls at 99% during texture bake (~90-120s)",
+  "then": "GET /v2/studio/project/detail/v3/<project_id>?locale=zh-CN -> model_url"
+ },
+ "confirmed_result": {
+  "project_name": "red apple 3d model",
+  "status": "success",
+  "model_version": "v3.1-20260211",
+  "type": "image_to_model",
+  "operator_id": "ededce5f-5409-4e08-9d06-b5cf82e657f3",
+  "project_id": "0364783a-ca81-4c72-8200-052b0bc5b624",
+  "cost_credits": 55,
+  "credits_before": 180,
+  "credits_after": 125,
+  "glb": {
+   "bytes": 15805980,
+   "gltf_version": "2.0",
+   "generator": "gltfpack 1.2",
+   "meshes": 1,
+   "materials": 1,
+   "images": 3,
+   "textures": 3,
+   "vertices": 1010879,
+   "triangles": 1987714,
+   "attributes": [
+    "POSITION",
+    "NORMAL",
+    "TEXCOORD_0"
+   ],
+   "filename_pattern": "tripo_pbr_model_<operator_id>_meshopt.glb"
+  },
+  "artifact": "artifacts/apple_3d.glb"
+ },
+ "still_gated": {
+  "text_to_model": "403 6102 - UI ships NO prompt box at all, member-only",
+  "multiview_to_model": "opens upgrade modal (professional CNY9+/month)",
+  "generate_parts": "label 'subscription exclusive'",
+  "texture 8K": "label 'trial x1'",
+  "smart_mesh_v2": "quota shows 2 but blocked behind 6102"
+ },
+ "ui_automation_notes": [
+  "Generate button must be clicked by real Input.dispatchMouseEvent at its rect center - b.click() is swallowed",
+  "Button text regex to disambiguate from 'Generate Multiview': /^Generate\\s*\\n?\\s*\\d+$/",
+  "Image upload via DOM.setFileInputFiles on the 196x196 file input; poll for 'Generate Multiview' button to appear = audit done"
+ ]
+}

@@ -1,0 +1,7 @@
+{
+  "_comment": "从浏览器登录态导出。JWT 15 分钟过期，过期后用下方 whoami 方式换新。",
+  "jwt": "<ES256 JWT，从 Authorization: Bearer 头复制>",
+  "device_id": "<tripo_device_id cookie 值>",
+  "cookie": "ory_kratos_session=<...>; csrf_token_93f...=<...>; tripo_device_id=<...>",
+  "csrf": "<csrf_token_93f... 的值>"
+}

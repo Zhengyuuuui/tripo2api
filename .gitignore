@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+config.json
+accounts.json
+accounts.json.migrated
+data/
+.DS_Store

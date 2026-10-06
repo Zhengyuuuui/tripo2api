@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tripo2api Console</title>
+<style>
+:root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e; --accent:#1f6feb; --accent2:#58a6ff; --green:#3fb950; --red:#f85149; --yellow:#d29922; --purple:#a371f7; --line:#2a2f3a; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+header { background:var(--card); border-bottom:1px solid var(--border); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; flex-wrap:wrap; gap:12px; }
+header h1 { font-size:18px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.badge { color:var(--muted); font-size:12px; }
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+.dot-ok { background:var(--green); box-shadow:0 0 6px var(--green); }
+.dot-warn { background:var(--yellow); }
+.dot-bad { background:var(--red); }
+nav { display:flex; gap:4px; margin-left:24px; flex-wrap:wrap; }
+nav a { color:var(--muted); text-decoration:none; padding:6px 12px; border-radius:8px; font-size:13px; cursor:pointer; }
+nav a:hover { color:var(--text); background:rgba(255,255,255,.05); }
+nav a.active { color:var(--text); background:rgba(88,166,255,.15); }
+main { max-width:1280px; margin:0 auto; padding:24px 32px; }
+.page { display:none; }
+.page.active { display:block; }
+.section { margin-bottom:28px; }
+.section-title { font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:24px; }
+.stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 20px; }
+.stat-value { font-size:26px; font-weight:700; }
+.stat-value small { font-size:14px; font-weight:400; color:var(--muted); }
+.stat-label { font-size:12px; color:var(--muted); margin-top:2px; }
+.reg-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.field { display:flex; flex-direction:column; gap:4px; }
+.field label { font-size:12px; color:var(--muted); }
+.field input, .field select, .field textarea { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:14px; }
+.field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--accent); }
+.btn { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:500; transition:all .15s; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent2); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+.btn-sm { padding:5px 12px; font-size:12px; border-radius:6px; }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { border-color:var(--accent); }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; padding:8px 12px; border-bottom:1px solid var(--border); }
+td { padding:9px 12px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+.tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.tag-image { background:rgba(88,166,255,.15); color:var(--accent2); }
+.tag-3d { background:rgba(163,113,247,.18); color:#c9a6ff; }
+.tag-chat { background:rgba(63,185,80,.15); color:var(--green); }
+.tag-running { background:rgba(210,153,34,.15); color:var(--yellow); }
+.tag-free { background:rgba(63,185,80,.15); color:var(--green); }
+.tag-pro { background:rgba(163,113,247,.18); color:#c9a6ff; border:1px solid rgba(163,113,247,.35); }
+.tag-succeeded { background:rgba(63,185,80,.15); color:var(--green); }
+.tag-failed { background:rgba(248,81,73,.15); color:var(--red); }
+.tag-gated { background:rgba(248,81,73,.12); color:var(--red); border:1px solid rgba(248,81,73,.3); }
+.note { font-size:12px; color:var(--muted); margin-top:10px; }
+.empty { text-align:center; color:var(--muted); padding:28px; }
+.kv { display:grid; grid-template-columns:auto 1fr; gap:6px 16px; font-size:13px; }
+.kv .k { color:var(--muted); }
+.kv .v { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all; }
+.gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:14px; }
+.gallery figure { margin:0; background:var(--bg); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.gallery img { width:100%; display:block; aspect-ratio:1; object-fit:cover; background:#000; }
+.gallery figcaption { padding:7px 10px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between; gap:6px; }
+.link { color:var(--accent2); cursor:pointer; font-size:12px; text-decoration:none; }
+.link:hover { text-decoration:underline; }
+#log { background:#010409; border:1px solid var(--border); border-radius:10px; padding:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; line-height:1.65; max-height:460px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; }
+#log .ok { color:var(--green); } #log .err { color:var(--red); } #log .warn { color:var(--yellow); } #log .info { color:var(--accent2); } #log .dim { color:var(--muted); }
+.chip { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:16px; padding:3px 10px; font-size:12px; }
+.chip button { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; padding:0; }
+.mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+.drop { border:1.5px dashed var(--line); border-radius:10px; padding:10px; transition:.15s; }
+.bar { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; border:1px solid var(--border); }
+.bar > i { display:block; height:100%; background:var(--accent); transition:width .4s; }
+.pill { font-size:11px; padding:1px 7px; border-radius:8px; background:rgba(255,255,255,.06); color:var(--muted); }
+.scroll-y { max-height:320px; overflow-y:auto; }
+.warnbox { background:rgba(210,153,34,.08); border:1px solid rgba(210,153,34,.3); border-radius:10px; padding:10px 14px; font-size:12px; color:#e3b341; margin-bottom:14px; }
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <h1><span class="dot dot-warn" id="healthDot"></span>tripo2api</h1>
+    <nav>
+      <a class="active" data-page="overview">总览</a>
+      <a data-page="image">生图</a>
+      <a data-page="model3d">3D</a>
+      <a data-page="assets">资产</a>
+      <a data-page="pricing">价格</a>
+      <a data-page="accounts">账号池</a>
+      <a data-page="artifacts">产物</a>
+      <a data-page="logs">日志</a>
+    </nav>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <span class="badge" id="sessBadge">session: -</span>
+    <span class="badge" id="creditsBadge">credits: -</span>
+    <span class="badge" id="lastRefresh"></span>
+  </div>
+</header>
+<main>
+
+<!-- ============ OVERVIEW ============ -->
+<div class="page active" id="page-overview">
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="stCredits">-</div><div class="stat-label">可用 credits</div></div>
+    <div class="stat"><div class="stat-value" id="stExpire">-</div><div class="stat-label">credits 到期日</div></div>
+    <div class="stat"><div class="stat-value" id="stAssets">-</div><div class="stat-label">资产数 / 上限</div></div>
+    <div class="stat"><div class="stat-value" id="stQuota3d">-</div><div class="stat-label">smart_mesh_v2 剩余</div></div>
+    <div class="stat"><div class="stat-value" id="stQuotaUv">-</div><div class="stat-label">uv_edit 剩余</div></div>
+    <div class="stat"><div class="stat-value" id="stExport">-</div><div class="stat-label">免费导出剩余</div></div>
+    <div class="stat"><div class="stat-value" id="stLocalImages" style="font-size:20px">-</div><div class="stat-label">本地生图记录(SQLite)</div></div>
+    <div class="stat"><div class="stat-value" id="stLocalModels" style="font-size:20px">-</div><div class="stat-label">本地 3D 记录(SQLite)</div></div>
+    <div class="stat"><div class="stat-value" id="stKeepAlive" style="font-size:20px">-</div><div class="stat-label">保活守护 <span id="stKaDetail" style="opacity:.7"></span></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">账号与额度</div>
+    <div class="card"><div class="kv" id="accKv"><span class="dim">加载中...</span></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">成本速查 <span class="badge" style="font-weight:400">实测消耗</span></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th style="width:200px">能力</th><th style="width:110px">credits</th><th style="width:150px">200c 可用</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>图像生成（每张）</td><td><span class="tag tag-image">10</span></td><td>20 张</td><td>实测 200→190；9 个模型可选</td></tr>
+          <tr><td>3D 图生模型（每个）</td><td><span class="tag tag-3d">55</span></td><td>3 个</td><td>实测 180→125；约 5.5 分钟</td></tr>
+          <tr><td>文生 3D</td><td><span class="tag tag-gated">需会员</span></td><td>—</td><td>403 code 6102</td></tr>
+          <tr><td>多视图 / 分部件 / 8K 贴图</td><td><span class="tag tag-gated">需会员</span></td><td>—</td><td>UI 升级墙</td></tr>
+          <tr><td>格式导出（FBX/OBJ/STL/USD/3MF）</td><td><span class="tag tag-gated">需会员</span></td><td>—</td><td>本地 gltf-transform / assimp 可替代</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">可用模型 <button class="btn btn-outline btn-sm" onclick="loadModels()">刷新</button></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th style="width:230px">模型 ID</th><th style="width:130px">显示名</th><th style="width:90px">类型</th><th>状态</th></tr></thead>
+        <tbody id="modelsBody"><tr><td colspan="4" class="empty">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ IMAGE ============ -->
+<div class="page" id="page-image">
+  <div class="section">
+    <div class="section-title">生图工作台 <span class="badge" id="imgQuotaBadge" style="font-weight:400">credits: -</span></div>
+    <div class="card">
+      <div class="reg-row" style="margin-bottom:10px">
+      <div class="field" style="flex:1;min-width:280px"><label>Prompt</label><input id="imgPrompt" placeholder="a red apple on a wooden table, studio lighting" style="width:100%"></div>
+      <div class="field"><label>参考图（可选）</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="imgRefKey" readonly placeholder="未上传" style="width:180px;opacity:.75;font-size:12px">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('imgRefFile').click()">上传</button>
+          <button class="btn btn-outline btn-sm" onclick="clearImgRef()">清除</button>
+          <input id="imgRefFile" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="onImgRefPick(this)">
+        </div>
+      </div>
+      <div class="field"><label>模型</label><select id="imgModel"></select></div>
+        <div class="field"><label>比例</label>
+          <select id="imgAspect">
+            <option value="1:1">1:1</option><option value="4:3">4:3</option>
+            <option value="3:4">3:4</option><option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+          </select>
+        </div>
+        <div class="field"><label>张数</label><input id="imgN" type="number" min="1" max="4" value="1" style="width:64px"></div>
+        <div class="field"><label>模板</label><select id="imgTemplate"><option value="">(无)</option></select></div>
+        <div class="field"><label>T Pose</label><select id="imgTpose"><option value="false">否</option><option value="true">是</option></select></div>
+        <div class="field"><label>草图渲染</label><select id="imgSketch"><option value="false">否</option><option value="true">是</option></select></div>
+        <button class="btn btn-primary" id="imgGo" onclick="doImage()">生成</button>
+      </div>
+      <div class="note">单张 10 credits · 无 SSE，提交后自动轮询 <span class="mono">get_image_asset</span> 至 <span class="mono">status=success</span>。上传参考图后按图生图（<span class="mono">image:{bucket,key}</span>）。</div>
+      <div id="imgRefPreview" style="display:none;margin:10px 0">
+        <figure style="margin:0;display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <img id="imgRefImg" style="width:120px;height:120px;object-fit:contain;display:block;background:#000">
+          <figcaption style="padding:5px 8px;font-size:11px;color:var(--muted)" id="imgRefCap"></figcaption>
+        </figure>
+      </div>
+      <div class="note" id="imgStatus"></div>
+      <div class="gallery" id="imgGallery"></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">图像资产 <button class="btn btn-outline btn-sm" onclick="loadImageAssets()">刷新</button></div>
+    <div class="card scroll-y" style="padding:0">
+      <table>
+        <thead><tr><th style="width:150px">时间</th><th style="width:200px">模型</th><th>Prompt</th><th style="width:80px">状态</th></tr></thead>
+        <tbody id="imgAssetBody"><tr><td colspan="4" class="empty">暂无</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 3D ============ -->
+<div class="page" id="page-model3d">
+  <div class="warnbox">
+    实测可行路径：<b>图生 3D</b>（上传图 → <span class="mono">image_to_model</span>，55 credits，约 5.5 分钟）。
+    文生 3D / 多视图 / 分部件 / 8K 贴图 均为会员功能（403 code 6102），本面板不提供入口。
+  </div>
+  <div class="section">
+    <div class="section-title">3D 生成工作台</div>
+    <div class="card">
+      <div class="reg-row" style="margin-bottom:10px">
+        <div class="field" style="flex:1;min-width:260px"><label>输入图（上传 或 粘贴 key / URL）</label>
+          <input id="d3Img" placeholder="tripo-data/.../image.png 或完整 https:// 签名 URL" style="width:100%"></div>
+        <div class="field"><label>上传</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('d3File').click()">选图</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('imgRefFile').click()">用生图页参考图</button>
+            <input id="d3File" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="onD3Pick(this)">
+          </div>
+        </div>
+        <div class="field"><label>模型</label><select id="d3Model"></select></div>
+        <div class="field"><label>面数上限</label><input id="d3Face" type="number" min="50000" max="2000000" step="50000" value="2000000" style="width:120px"></div>
+        <div class="field"><label>四边面</label><select id="d3Quad"><option value="false">三角面</option><option value="true">四边面</option></select></div>
+        <div class="field"><label>贴图</label><select id="d3Tex"><option value="true">有（PBR）</option><option value="false">无（省分）</option></select></div>
+        <div class="field"><label>几何质量</label><select id="d3Geo"><option value="detailed">detailed</option><option value="standard">standard</option></select></div>
+        <div class="field"><label>等待完成</label><select id="d3Wait"><option value="true">是（阻塞至 success）</option><option value="false">否（仅提交）</option></select></div>
+        <button class="btn btn-primary" id="d3Go" onclick="do3d()">提交</button>
+      </div>
+      <div id="d3ProgressWrap" style="display:none;margin-top:6px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px">
+          <span id="d3ProgLabel">等待中</span><span id="d3ProgPct">0%</span>
+        </div>
+        <div class="bar"><i id="d3Bar" style="width:0%"></i></div>
+      </div>
+      <div class="note" id="d3Status"></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">3D 资产 <button class="btn btn-outline btn-sm" onclick="loadAssets()">刷新</button></div>
+    <div class="card scroll-y" style="padding:0">
+      <table>
+        <thead><tr><th style="width:160px">名称</th><th style="width:140px">模型版本</th><th style="width:80px">面数</th><th style="width:90px">贴图</th><th>产物</th></tr></thead>
+        <tbody id="assetBody"><tr><td colspan="5" class="empty">暂无</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ASSETS ============ -->
+<div class="page" id="page-assets">
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>我的资产</span>
+      <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="pill" id="assetCount">-</span>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)" title="官方预置演示模型（Tripo Demo Model 等）">
+          <input type="checkbox" id="assetShowPreset" onchange="loadAssets()"> 显示预置</label>
+        <button class="btn btn-outline btn-sm" onclick="loadAssets()">刷新</button>
+      </span>
+    </div>
+    <div class="card" style="padding:0">
+      <table>
+        <thead><tr><th style="width:200px">名称</th><th style="width:100px">类型</th><th style="width:150px">版本</th><th style="width:90px">状态</th><th>下载</th></tr></thead>
+        <tbody id="allAssetBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">导出通道</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th style="width:230px">通道</th><th style="width:90px">权限</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">GET /project/detail/v3/&lt;id&gt;</td><td><span class="tag tag-free">免费</span></td><td>取运行时 model_url（原生 meshopt GLB）</td></tr>
+          <tr><td class="mono">POST /operation/download_with_name</td><td><span class="tag tag-free">免费</span></td><td>同上；<b>file_name 扩展名被忽略</b>，不会转格式</td></tr>
+          <tr><td class="mono">POST /operation/export</td><td><span class="tag tag-gated">会员</span></td><td>USD/FBX/OBJ/STL/3MF 转换，403 6102</td></tr>
+          <tr><td class="mono">POST /operation/export-lite</td><td><span class="tag tag-gated">会员</span></td><td>同上，403 6102</td></tr>
+        </tbody>
+      </table>
+      <div class="note" style="padding:0 18px 14px">
+        免费 GLB 使用 <span class="mono">EXT_meshopt_compression</span> + <span class="mono">KHR_mesh_quantization</span>。
+        Blender ≥3.0 / three.js / Unity / Unreal 可直接打开；3D 打印切片需先本地转 STL/OBJ：
+        <span class="mono">assimp export model.glb model.obj</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PRICING ============ -->
+<div class="page" id="page-pricing">
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>官方订阅价格 <span class="badge" id="priceRegion" style="font-weight:400"></span></span>
+      <button class="btn btn-outline btn-sm" onclick="loadPricing()">刷新</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr>
+          <th style="width:190px">套餐</th><th style="width:80px">周期</th>
+          <th style="width:120px">USD</th><th style="width:120px">CNY</th>
+          <th style="width:110px">credits/元</th><th>状态</th>
+        </tr></thead>
+        <tbody id="priceBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="note" id="priceNote"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">免费额度（basic 计划实测）</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th style="width:200px">项目</th><th style="width:90px">数量</th><th>实测来源 / 限制</th></tr></thead>
+        <tbody>
+          <tr><td>注册赠送 credits</td><td><span class="tag tag-free">200</span></td><td>GET /user/profile/payment，月底过期</td></tr>
+          <tr><td>图像生成</td><td><span class="tag tag-free">10/张</span></td><td>实测 200→190，200c ≈ 20 张</td></tr>
+          <tr><td>3D 图生模型</td><td><span class="tag tag-free">55/个</span></td><td>实测 180→125，200c ≈ 3 个</td></tr>
+          <tr><td>smart_mesh_v2</td><td><span class="tag tag-gated">2（不可达）</span></td><td>quota 显示 2，但 403 6102 拦在扣减前 = 死额度</td></tr>
+          <tr><td>uv_edit</td><td><span class="tag tag-gated">2（未找到入口）</span></td><td>quota 显示 2，free 计划下无入口</td></tr>
+          <tr><td>免费导出</td><td><span class="tag tag-gated">15（会员专属）</span></td><td>export-limit 显示 15，但 free 走不到 export 端点</td></tr>
+          <tr><td>Kratos session</td><td><span class="tag tag-free">30 天</span></td><td>邮箱验证码登录，无 Turnstile</td></tr>
+          <tr><td>JWT</td><td><span class="tag tag-free">15 分钟</span></td><td>ES256，需缓存 + 续签</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ACCOUNTS ============ -->
+<div class="page" id="page-accounts">
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>浏览器登录导入</span>
+      <span class="note">从本机 CDP <span class="mono" id="cdpPortLbl">9366</span> 的 Chrome 读取当前已登录的 Tripo 会话并加入账号池（不接触密码）</span>
+    </div>
+    <div class="card">
+      <div class="reg-row" style="margin-bottom:10px">
+        <div class="field"><label>CDP 调试端口</label><input id="cdpPort" type="number" value="9366" style="width:120px"></div>
+        <div class="field" style="flex:1;min-width:220px"><label>要求页面已打开</label><input id="cdpUrlHint" value="https://studio.tripo3d.ai/zh/workspace/generate" readonly style="width:100%;opacity:.7"></div>
+        <div class="field"><label>标签页匹配</label><input id="cdpMatch" value="tripo3d.ai" placeholder="tripo3d.ai" style="width:150px"></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" id="capGo" onclick="captureAccount()">从 9366 Chrome 捕获登录态</button>
+        <button class="btn btn-outline btn-sm" onclick="renewAllJwt()">续签全部 JWT</button>
+        <span class="note" id="capStatus"></span>
+      </div>
+      <div class="note">
+        流程：确保 <span class="mono">Chrome</span> 以 <span class="mono">--remote-debugging-port=9366</span> 启动且已登录 studio.tripo3d.ai → 点「捕获」→
+        自动读取 <span class="mono">ory_kratos_session</span> / <span class="mono">csrf_token_*</span> / <span class="mono">tripo_device_id</span> cookie
+        并调 <span class="mono">whoami?tokenizeAs=default_jwt</span> 换 ES256 JWT 入池。重复捕获同一账号会覆盖更新，不会重复添加。
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>账号池 <span class="pill" id="accCount">-</span></span>
+      <div>
+        <button class="btn btn-outline btn-sm" id="accPollBtn" onclick="pollAccounts(false)">刷新全部额度</button>
+        <button class="btn btn-outline btn-sm" onclick="exportAccounts()">导出</button>
+      </div>
+    </div>
+    <div class="card" style="padding:0">
+      <table>
+        <thead><tr>
+          <th style="width:40px">#</th>
+          <th style="width:230px">邮箱 / 标识</th>
+          <th style="width:90px">计划</th>
+          <th style="width:120px">credits</th>
+          <th style="width:110px">到期日</th>
+          <th style="width:130px">免费额度</th>
+          <th style="width:80px">资产</th>
+          <th style="width:120px">JWT</th>
+          <th>操作</th>
+        </tr></thead>
+        <tbody id="accBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="note" id="accNote"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>保活守护 <span class="note">后台线程，独立于浏览器工作：JWT 提前续签 + 额度快照 + session 预警</span></span>
+      <button class="btn btn-outline btn-sm" onclick="tickKeepAlive()">立即跑一轮</button>
+    </div>
+    <div class="card"><div class="kv" id="kaKv">加载中...</div></div>
+    <div class="note">
+      Tripo 用的是 <b>Ory Kratos</b>，不是 access/refresh 双 token：
+      <span class="mono">ory_kratos_session</span>（30 天，不可续，只能重新登录）≈ 长期凭证；
+      ES256 JWT（15 分钟，<b>可无限续签</b>）≈ access token。
+      所以 JWT 部分全自动，只有 session 到期前需要你打开浏览器点一次「捕获」。
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">会话与凭证说明</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th style="width:180px">凭证</th><th style="width:100px">有效期</th><th>来源与作用</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">ory_kratos_session</td><td><span class="tag tag-free">30 天</span></td><td>Ory Kratos 会话（邮箱验证码登录，aal1）</td></tr>
+          <tr><td class="mono">Authorization: Bearer &lt;JWT&gt;</td><td><span class="tag tag-running">15 分钟</span></td><td>ES256，iss=auth.tripo3d.ai；服务层会在过期前自动用 whoami 续签</td></tr>
+          <tr><td class="mono">x-tripo-device-id</td><td>长期</td><td>= <span class="mono">tripo_device_id</span> cookie，必带</td></tr>
+          <tr><td class="mono">csrf_token_*</td><td>随会话</td><td>httpOnly cookie + <span class="mono">csrf_token</span> header</td></tr>
+          <tr><td class="mono">x-tripo-start</td><td>—</td><td>页面加载时间戳（埋点用，任意浮点即可）</td></tr>
+        </tbody>
+      </table>
+      <div class="note" style="padding:0 18px 14px">CF Managed Challenge 只挡网页域 <span class="mono">studio.tripo3d.ai</span>，API 域 <span class="mono">api.tripo3d.ai</span> 可纯 HTTP 直连，因此服务端代理无需浏览器常驻。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ POOL ASSETS ============ -->
+<div class="page" id="page-artifacts">
+  <!-- ① 账号池配额（来自云端，跨账号） -->
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>账号池配额 <span class="note">上限由服务端按订阅档下发（basic = 10/账号）；官网在 80% / 100% 时提示升级</span></span>
+      <button class="btn btn-outline btn-sm" onclick="loadArtifacts()">刷新</button>
+    </div>
+    <div class="stats" id="artQuotas" style="margin-bottom:0"></div>
+  </div>
+
+  <!-- ② 统一产物表（本地 DB + 云端实时） -->
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>产物 <span class="pill" id="artCount">-</span></span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="artSource" onchange="loadArtifacts()" title="数据源"
+                style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px">
+          <option value="merged">合并视图</option>
+          <option value="cloud">云端实时</option>
+          <option value="db">仅本地 DB</option>
+        </select>
+        <select id="artKind" onchange="loadArtifacts()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px">
+          <option value="">全部类型</option><option value="image">图像</option><option value="model3d">3D</option>
+        </select>
+        <select id="artOwner" onchange="loadArtifacts()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px">
+          <option value="">全部账号</option>
+        </select>
+        <input id="artQ" placeholder="搜索名称/模型/账号" onkeydown="if(event.key==='Enter')loadArtifacts()"
+               style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;width:160px">
+        <button class="btn btn-outline btn-sm" onclick="backfillImages()">云端回填</button>
+        <button class="btn btn-outline btn-sm" onclick="exportArtifacts()">导出</button>
+      </div>
+    </div>
+    <div class="stats" id="artStats"></div>
+    <div class="card scroll-y" style="padding:0">
+      <table>
+        <thead><tr>
+          <th style="width:48px">类型</th>
+          <th style="width:56px">缩略</th>
+          <th style="width:190px">名称 / Prompt</th>
+          <th style="width:150px">模型</th>
+          <th style="width:165px">归属账号</th>
+          <th style="width:80px">积分</th>
+          <th style="width:120px">来源</th>
+          <th style="width:130px">签名状态</th>
+          <th>操作</th>
+        </tr></thead>
+        <tbody id="artBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="note" id="artNote"></div>
+  </div>
+
+  <!-- ③ 存储策略 -->
+  <div class="section">
+    <div class="section-title">存储策略</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th style="width:180px">项目</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">数据库存什么</td><td><span class="mono">s3_bucket</span> + <span class="mono">s3_key</span> + 元数据。<b>永久有效</b>，图片/模型字节一律不落盘</td></tr>
+          <tr><td class="mono">签名 URL</td><td>CloudFront 预签名，<b>约 1~24 小时</b>过期；随用随取，用完即弃</td></tr>
+          <tr><td>换签名方式</td><td><span class="mono">/v1/db/artifacts/fresh-url?kind=&amp;id=</span> —— 调 <span class="mono">get_image_asset</span> / <span class="mono">project/detail</span>，服务端每次都会<b>重新签名</b>（实测同一产物两次取到的 URL 不同）</td></tr>
+          <tr><td>下载不落盘</td><td>加 <span class="mono">&amp;download=1</span> 返回 <b>302 直跳官方 CDN</b>，字节从 Tripo 直出，<b>不经过本机</b></td></tr>
+          <tr><td>本地压力</td><td><b>≈ 0</b></td></tr>
+          <tr><td>三个数据源</td><td>
+            <b>本地 DB</b> = 本工具经手的产物（含签名状态）；<br>
+            <b>云端实时</b> = 账号全部资产（含官网 UI 生成的、预置模型），受 10/账号 配额约束；<br>
+            <b>合并</b> = 两者去重合并，云端项标注是否已入库本地。
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-logs">
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between">
+      <span>运行日志</span>
+      <span style="display:flex;gap:8px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)"><input type="checkbox" id="logAuto" checked> 自动滚动</label>
+        <button class="btn btn-outline btn-sm" onclick="logClear()">清空</button>
+      </span>
+    </div>
+    <div class="card" style="padding:0"><div id="log"></div></div>
+  </div>
+</div>
+
+</main>
+<script>
+const CFG = { base: '', token: '' };
+const state = { credits: null, expire: '', assets: null, models: [], cur3d: null, pollTimer: null };
+
+const MODELS_IMAGE = [
+  ['gemini_3.1_flash_image_preview', 'Nano Banana 2', '实测跑通'],
+  ['gemini_2.5_flash_image_preview', 'Nano Banana', '实测跑通'],
+  ['gemini_3_pro_image_preview',   'Nano Banana Pro', ''],
+  ['gpt_image_2.5_sunburst',       'GPT Image 2.5', ''],
+  ['gpt_image_2',                  'GPT Image 2', ''],
+  ['gpt_image_1.5',                'GPT Image 1.5', ''],
+  ['flux.1_kontext_pro',           'FLUX.1 Kontext Pro', ''],
+  ['flux.1_dev',                   'FLUX.1 Dev', ''],
+  ['midjourney',                   'Midjourney', ''],
+];
+const MODELS_3D = [
+  ['v3.1-20260211', 'Tripo v3.1', '实测跑通'],
+  ['v3.0-20260909', 'Tripo v3.0', ''],
+  ['v2.5-20260210', 'Tripo v2.5', ''],
+  ['v2.0-20260430', 'Tripo v2.0', ''],
+  ['v1.0-20250506', 'Tripo v1.0', ''],
+  ['Nexus-v2.0-20260801', 'Nexus v2.0', ''],
+  ['Nexus-v1.0-20260214', 'Nexus v1.0', ''],
+];
+
+function log(msg, cls) {
+  const el = document.getElementById('log');
+  const d = new Date().toLocaleTimeString('en-GB');
+  const line = document.createElement('div');
+  line.innerHTML = '<span class="dim">' + d + '</span> <span class="' + (cls||'info') + '">' + msg + '</span>';
+  el.appendChild(line);
+  if (document.getElementById('logAuto').checked) el.scrollTop = el.scrollHeight;
+  while (el.children.length > 800) el.removeChild(el.firstChild);
+}
+function logClear() { document.getElementById('log').innerHTML = ''; }
+
+async function api(path, opts) {
+  opts = opts || {};
+  const url = (CFG.base || '') + path;
+  const h = Object.assign({ 'content-type': 'application/json' }, opts.headers || {});
+  if (CFG.token) h['authorization'] = 'Bearer ' + CFG.token;
+  if (opts.body) h['content-type'] = 'application/json';
+  const t0 = performance.now();
+  try {
+    const r = await fetch(url, { method: opts.method || (opts.body ? 'POST' : 'GET'), headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined });
+    const txt = await r.text();
+    let j; try { j = JSON.parse(txt); } catch (_) { j = { raw: txt }; }
+    log(opts.method + ' ' + path + ' -> ' + r.status + ' (' + Math.round(performance.now() - t0) + 'ms)', r.status < 300 ? 'ok' : 'err');
+    return { status: r.status, body: j };
+  } catch (e) {
+    log(opts.method + ' ' + path + ' -> FAIL ' + e.message, 'err');
+    return { status: 0, body: { error: { message: e.message } } };
+  }
+}
+const errMsg = (r) => (r.body && (r.body.error || {}).message) || (r.body && r.body.message) || ('HTTP ' + r.status);
+
+function switchPage(p) {
+  document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.dataset.page === p));
+  localStorage.setItem('tripo2api.page', p);
+  if (p === 'assets') loadAssets();
+  if (p === 'pricing') loadPricing();
+  if (p === 'image') loadImageAssets();
+  if (p === 'artifacts') loadArtifacts();
+  if (p === 'accounts') {
+    if (document.getElementById('accBody').innerHTML.indexOf('加载中') >= 0) loadAccounts();
+  }
+}
+document.querySelectorAll('nav a').forEach(a => a.onclick = () => switchPage(a.dataset.page));
+
+/* ---------- 总览 ---------- */
+async function loadOverview() {
+  const dot = document.getElementById('healthDot');
+  const pay = await api('/v1/studio/user/profile/payment', { method: 'GET' });
+  if (pay.status === 200 && pay.body.data) {
+    const w = pay.body.data.wallet || {};
+    state.credits = w.total_credit; state.expire = w.expiring_date || '';
+    document.getElementById('stCredits').textContent = w.total_credit != null ? w.total_credit : '-';
+    document.getElementById('stExpire').textContent = w.expiring_date || '-';
+    document.getElementById('creditsBadge').textContent = 'credits: ' + (w.total_credit != null ? w.total_credit : '?');
+    document.getElementById('imgQuotaBadge').textContent = 'credits: ' + (w.total_credit != null ? w.total_credit : '?');
+    const m = pay.body.data.member || {};
+    document.getElementById('accKv').innerHTML = [
+      ['邮箱', m.email || (pay.body.data.identity||{}).email || '-'],
+      ['计划', m.type + (m.free_trial ? ' (free_trial)' : '')],
+      ['会员到期', m.end_time || '-'],
+      ['积分', w.total_credit + ' (其中 ' + (w.expiring_credit||0) + ' 将于 ' + (w.expiring_date||'?') + ' 过期)'],
+      ['邀请码', (pay.body.data.invitation||{}).code || '-'],
+    ].map(r => '<span class="k">' + r[0] + '</span><span class="v">' + esc(r[1]) + '</span>').join('');
+    dot.className = 'dot dot-ok';
+  } else {
+    document.getElementById('accKv').innerHTML = '<span class="err">额度查询失败：' + esc(errMsg(pay)) + '</span>';
+    dot.className = 'dot dot-bad';
+  }
+
+  const q = await api('/v1/studio/operation/quota', { method: 'POST', body: {} });
+  if (q.status === 200 && q.body.data) {
+    const quota = q.body.data.quota || {};
+    const g = quota.generation || {};
+    // smart_mesh_v2 在 generation 下；uv_edit 与 generation 平级（实测结构）
+    const sm = g.smart_mesh_v2 || {};
+    const uv = (quota.uv_edit && quota.uv_edit.generate) || {};
+    document.getElementById('stQuota3d').textContent = sm.remaining != null ? sm.remaining : '-';
+    document.getElementById('stQuotaUv').textContent = uv.remaining != null ? uv.remaining : '-';
+  }
+
+  const ex = await api('/v1/studio/marketing/export-limit', { method: 'GET' });
+  if (ex.status === 200 && ex.body.data) {
+    const e = ex.body.data.export_limit || {};
+    document.getElementById('stExport').textContent = e.total_count != null ? (e.total_count - e.used_count) : '-';
+  }
+
+  const a = await api('/v1/studio/assets/v2?asset_type=mine&locale=zh-CN&offset=0&size=1&type=all', { method: 'GET' });
+  if (a.status === 200 && a.body.data) {
+    state.assets = a.body.data;
+    document.getElementById('stAssets').textContent = (a.body.data.total != null ? a.body.data.total : '?') + ' / ' + (a.body.data.max_assets || '?');
+  }
+  const dst = await api('/v1/db/stats', { method: 'GET' });
+  if (dst.status === 200 && dst.body) {
+    state.dbStats = dst.body;
+    const i = dst.body.images || {}, m = dst.body.models3d || {};
+    document.getElementById('stLocalImages').textContent = (i.c || 0) + ' 张 / ' + (i.s || 0) + 'c';
+    document.getElementById('stLocalModels').textContent = (m.c || 0) + ' 个 / ' + (m.s || 0) + 'c';
+  }
+  // 保活状态
+  const ka = await api('/v1/keepalive/status', { method: 'GET' });
+  if (ka.status === 200 && ka.body) {
+    const k = ka.body;
+    const ok = k.enabled && (k.accounts || []).every(a => !a.fails);
+    document.getElementById('stKeepAlive').textContent = k.enabled ? (ok ? '运行中' : '异常') : '已禁用';
+    document.getElementById('stKeepAlive').style.color = !k.enabled ? 'var(--muted)' : (ok ? 'var(--green)' : 'var(--red)');
+    const a0 = (k.accounts || [])[0] || {};
+    document.getElementById('stKaDetail').textContent = k.enabled
+      ? (a0.jwt_left_s != null ? ('JWT ' + Math.round(a0.jwt_left_s / 60) + 'm') : '') +
+        (a0.fails ? (' · 失败' + a0.fails) : '')
+      : 'TRIPO_KEEPALIVE=0';
+  }
+
+  document.getElementById('lastRefresh').textContent = '更新于 ' + new Date().toLocaleTimeString('en-GB');
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+function loadModels() {
+  const rows = [];
+  MODELS_IMAGE.forEach(m => rows.push('<tr><td class="mono">' + m[0] + '</td><td>' + m[1] + '</td><td><span class="tag tag-image">image</span></td><td>' + (m[2] ? '<span class="tag tag-free">' + m[2] + '</span>' : '<span class="dim">bundle 声明</span>') + '</td></tr>'));
+  MODELS_3D.forEach(m => rows.push('<tr><td class="mono">' + m[0] + '</td><td>' + m[1] + '</td><td><span class="tag tag-3d">3d</span></td><td>' + (m[2] ? '<span class="tag tag-free">' + m[2] + '</span>' : '<span class="dim">服务端接受</span>') + '</td></tr>'));
+  rows.push('<tr><td class="mono">—</td><td>文生 3D</td><td><span class="tag tag-3d">3d</span></td><td><span class="tag tag-gated">会员 · 403 6102</span></td></tr>');
+  document.getElementById('modelsBody').innerHTML = rows.join('');
+}
+
+/* ---------- 生图 ---------- */
+async function loadTemplates() {
+  const r = await api('/v1/studio/image/available_templates', { method: 'GET' });
+  if (r.status !== 200) return;
+  const list = ((r.body.data || {}).templates) || [];
+  const sel = document.getElementById('imgTemplate');
+  list.forEach(t => { const o = document.createElement('option'); o.value = t.template_id; o.textContent = t.title; sel.appendChild(o); });
+  log('templates loaded: ' + list.length, 'dim');
+}
+/* ---------- 下载统一入口 ----------
+   所有产物下载都走 /v1/db/artifacts/fresh-url?download=1
+   —— 服务端每次调查询端点都会重新签名（实测同一 asset_id 两次取到的 URL 不同），
+   再 302 直跳官方 CDN，图片/模型字节不经过本机。
+   裸签名 URL 只有 1~24 小时，不能直接用。                                  */
+function dlUrl(kind, id) {
+  return '/v1/db/artifacts/fresh-url?kind=' + encodeURIComponent(kind) +
+         '&id=' + encodeURIComponent(id) + '&download=1';
+}
+async function copyFreshUrl(kind, id, what) {
+  const r = await api('/v1/db/artifacts/fresh-url?kind=' + kind + '&id=' + encodeURIComponent(id), { method: 'GET' });
+  const u = (r.body && r.body.url) || '';
+  if (!u) { log('生成新链接失败: ' + errMsg(r), 'err'); return ''; }
+  const left = r.body.storage && r.body.storage.left_h != null ? ('（' + r.body.storage.left_h + 'h 有效）') : '';
+  try {
+    await navigator.clipboard.writeText(u);
+    log('已复制 ' + (what || '链接') + ' ' + left, 'ok');
+  } catch (e) { log('复制失败: ' + e.message, 'err'); }
+  return u;
+}
+
+/* ---------- 产物（合并：配额 + 本地DB/云端 + 存储策略） ---------- */
+async function loadArtifacts() {
+  const src = document.getElementById('artSource').value;
+  const kind = document.getElementById('artKind').value;
+  const owner = document.getElementById('artOwner').value;
+  const q = document.getElementById('artQ').value.trim();
+  const p = new URLSearchParams();
+  p.set('source', src);
+  if (kind) p.set('kind', kind);
+  if (owner) p.set('account', owner);
+  if (q) p.set('q', q);
+  const r = await api('/v1/db/artifacts?' + p.toString(), { method: 'GET' });
+  const d = (r.body && r.body) || { artifacts: [], summary: {}, quotas: [] };
+
+  // ---- ① 配额卡 ----
+  const qs = d.quotas || [];
+  document.getElementById('artQuotas').innerHTML = qs.length ? qs.map(a => {
+    const preset = a.presets || 0;
+    const userUsed = (a.total != null ? a.total : 0) - preset;
+    const cap = a.max_assets != null ? a.max_assets : 0;
+    const pct = cap ? Math.round(100.0 * userUsed / cap) : 0;
+    const col = pct >= 100 ? 'var(--red)' : (pct >= 80 ? 'var(--yellow)' : 'var(--accent)');
+    const bad = a.ok ? '' : ' <span class="tag tag-failed">探测失败</span>';
+    return '<div class="stat" style="padding:12px 16px">' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:3px" title="' + esc(a.email || '') + '">' +
+        esc((a.email || a.sub || '?').split('@')[0]) + bad + '</div>' +
+      '<div class="stat-value" style="font-size:22px">' + userUsed + '<small> / ' + cap +
+        (preset ? ' <span style="color:var(--muted)">(+' + preset + '预置)</span>' : '') + '</small></div>' +
+      '<div class="bar" style="margin-top:6px"><i style="width:' + Math.min(100, pct) + '%;background:' + col + '"></i></div>' +
+      '<div class="stat-label">' + (a.plan ? esc(a.plan) + ' · ' : '') + pct + '% · ' +
+        (a.credits != null ? a.credits + 'c' : '-') + '</div></div>';
+  }).join('') +
+  '<div class="stat" style="padding:12px 16px">' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:3px">池合计</div>' +
+    '<div class="stat-value" style="font-size:22px">' +
+      qs.reduce((n,a)=>n+((a.total||0)-(a.presets||0)),0) + '<small> / ' +
+      qs.reduce((n,a)=>n+(a.max_assets||0),0) + '</small></div>' +
+    '<div class="stat-label">' + qs.length + ' 个账号 · ' +
+      qs.filter(a=>a.ok).length + ' 正常' +
+      (qs.reduce((n,a)=>n+(a.presets||0),0) ? ' · 预置 ' + qs.reduce((n,a)=>n+(a.presets||0),0) + ' 个已隐藏' : '') +
+    '</div></div>'
+  : '<div class="stat"><div class="stat-value" style="font-size:18px">-</div><div class="stat-label">切到「合并/云端」视图以加载账号配额</div></div>';
+
+  // ---- 状态卡 ----
+  const s2 = d.summary || {};
+  document.getElementById('artStats').innerHTML = [
+    ['产物总数', s2.total || 0, ''],
+    ['本地 DB', s2.local || 0, 'var(--accent2)'],
+    ['云端', s2.cloud || 0, 'var(--purple)'],
+    ['云端未入库', s2.cloud_not_in_db || 0, 'var(--yellow)'],
+    ['签名有效', s2.signed_valid || 0, 'var(--green)'],
+    ['将过期/仅key', (s2.signed_soon || 0) + (s2.key_only || 0), 'var(--muted)'],
+  ].map(x => '<div class="stat" style="padding:12px 16px"><div class="stat-value" style="font-size:20px;color:' +
+    (x[2] || 'inherit') + '">' + x[1] + '</div><div class="stat-label">' + x[0] + '</div></div>').join('');
+
+  // ---- 账号下拉 ----
+  const sel = document.getElementById('artOwner');
+  const cur = sel.value;
+  const accs = (db => db)(qs);
+  sel.innerHTML = '<option value="">全部账号</option>' + accs.map(a =>
+    '<option value="' + esc(a.email || a.sub) + '">' + esc((a.email || a.sub || '').split('@')[0]) + '</option>').join('');
+  if (cur) sel.value = cur;
+
+  // ---- 产物表 ----
+  const stTag = (st) => {
+    const m = { signed_valid: ['tag-free', '有效'], signed_soon: ['tag-running', '将过期'],
+                key_only: ['tag-pro', '仅 key'], no_key: ['tag-failed', '缺 key'] };
+    const c = m[st.state] || ['tag-running', st.state];
+    const left = st.left_h != null ? (' · ' + (st.left_h < 1 ? Math.round(st.left_h * 60) + 'm' : st.left_h + 'h')) : '';
+    return '<span class="tag ' + c[0] + '">' + c[1] + left + '</span>';
+  };
+  const list = d.artifacts || [];
+  document.getElementById('artCount').textContent = list.length + ' 条';
+  document.getElementById('artBody').innerHTML = list.length ? list.map(a => {
+    const cover = a.cover
+      ? '<img src="' + esc(a.cover) + '" style="width:38px;height:38px;border-radius:6px;object-fit:cover;background:#000" loading="lazy">'
+      : (a.kind === 'model3d'
+          ? '<div style="width:38px;height:38px;border-radius:6px;background:#0b0f14;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted)">n/a</div>'
+          : '');
+    const srcTag = a.origin === 'cloud'
+      ? (a.in_db ? '<span class="tag tag-free">云端·已入库</span>' : '<span class="tag tag-running">云端·未入库</span>')
+      : '<span class="tag tag-image">本地</span>';
+    const isPreset = a.extra && a.extra.preset;
+    return '<tr>' +
+      '<td><span class="tag ' + (a.kind === 'model3d' ? 'tag-3d' : 'tag-image') + '">' +
+        (a.kind === 'model3d' ? '3D' : '图') + '</span></td>' +
+      '<td>' + cover + '</td>' +
+      '<td>' + esc((a.name || '(未命名)').slice(0, 40)) +
+        (isPreset ? ' <span class="tag tag-free">预置</span>' : '') +
+        '<div class="mono" style="font-size:10px;color:var(--muted)">' + esc((a.id || '').slice(0, 18)) + '</div></td>' +
+      '<td class="mono" style="font-size:11px">' + esc(a.model || '-') +
+        (a.extra && a.extra.face_limit ? '<div style="color:var(--muted)">' + a.extra.face_limit + ' 面</div>' : '') + '</td>' +
+      '<td class="mono" style="font-size:11px">' + esc((a.account || '-').split('@')[0]) + '</td>' +
+      '<td>' + (a.credits != null ? a.credits : '-') + '</td>' +
+      '<td>' + srcTag + '</td>' +
+      '<td>' + stTag(a.storage) + '</td>' +
+      '<td>' + (a.s3_key && a.id
+        ? '<a class="link" href="' + dlUrl(a.kind, a.id) + '" target="_blank">下载</a> ' +
+          '<a class="link" href="javascript:void(0)" onclick="copyFreshUrl(\'' + a.kind + '\',\'' + a.id + '\')">复制</a>'
+        : '<span class="dim">-</span>') + '</td>' +
+      '</tr>';
+  }).join('') : '<tr><td colspan="9" class="empty">无产物</td></tr>';
+
+  document.getElementById('artNote').innerHTML =
+    '「本地 DB」= 经本工具生成的（含签名状态与 S3 key）；「云端实时」= 账号全部资产（含官网 UI 生成的、预置模型），受 10/账号 配额约束；' +
+    '「合并」去重后合并两者并标注是否已入库。下载一律 302 直跳官方 CDN，<b>字节不经过本机</b>；' +
+    '签名 URL 约 1~24 小时过期，点「复制」随时换新。';
+}
+async function exportArtifacts() {
+  const src = document.getElementById('artSource').value;
+  const r = await api('/v1/db/artifacts?source=' + src + '&limit=500', { method: 'GET' });
+  const blob = new Blob([JSON.stringify(r.body, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tripo2api-artifacts-' + src + '-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  log('产物已导出（' + (((r.body || {}).summary || {}).total || 0) + ' 条）', 'ok');
+}
+
+/* ---------- 生图参考图上传 ---------- */
+let IMG_REF = null;   // {bucket, key, audit_result, filename, bytes}
+
+function onImgRefPick(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 20 * 1024 * 1024) { log('文件超过 20MB：' + f.name, 'err'); input.value = ''; return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  log('upload: ' + f.name + ' (' + (f.size / 1048576).toFixed(2) + 'MB)', 'info');
+  document.getElementById('imgStatus').textContent = '上传中 ' + f.name + ' ...';
+  fetch('/v1/upload/image', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(j => {
+      if (!j || !j.ok) {
+        const m = (j && j.error && j.error.message) || '未知错误';
+        document.getElementById('imgStatus').textContent = '上传失败：' + m;
+        log('upload failed: ' + m, 'err');
+        return;
+      }
+      IMG_REF = j;
+      document.getElementById('imgRefKey').value = j.key;
+      document.getElementById('imgRefCap').textContent = (j.filename || '') + ' · ' + (j.bytes / 1024).toFixed(0) + 'KB · audit ' + (j.audit_result || '-');
+      const pv = document.getElementById('imgRefPreview');
+      pv.style.display = 'block';
+      // 预览用本地 objectURL（服务端不回传读 URL，S3 私有）
+      const img = document.getElementById('imgRefImg');
+      if (img.dataset.localUrl) URL.revokeObjectURL(img.dataset.localUrl);
+      const u = URL.createObjectURL(f);
+      img.dataset.localUrl = u;
+      img.src = u;
+      document.getElementById('imgStatus').textContent = '参考图已就绪：' + j.key;
+      log('upload ok: ' + j.key + ' (audit=' + j.audit_result + ')', 'ok');
+    })
+    .catch(e => {
+      document.getElementById('imgStatus').textContent = '上传失败：' + e.message;
+      log('upload error: ' + e.message, 'err');
+    })
+    .finally(() => { input.value = ''; });
+}
+function onD3Pick(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 20 * 1024 * 1024) { log('文件超过 20MB', 'err'); input.value = ''; return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  document.getElementById('d3Status').textContent = '上传中 ' + f.name + ' ...';
+  log('3D input upload: ' + f.name, 'info');
+  fetch('/v1/upload/image', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(j => {
+      if (!j || !j.ok) { document.getElementById('d3Status').textContent = '上传失败：' + ((j.error||{}).message||'?'); return; }
+      document.getElementById('d3Img').value = j.key;
+      IMG_REF = j;
+      document.getElementById('d3Status').textContent = '已上传：' + j.key + '（audit ' + (j.audit_result||'-') + '），可直接提交';
+      log('3D input ready: ' + j.key, 'ok');
+    })
+    .catch(e => { document.getElementById('d3Status').textContent = '上传失败：' + e.message; })
+    .finally(() => { input.value = ''; });
+}
+function clearImgRef() {
+  IMG_REF = null;
+  document.getElementById('imgRefKey').value = '';
+  document.getElementById('imgRefPreview').style.display = 'none';
+  const img = document.getElementById('imgRefImg');
+  if (img.dataset.localUrl) { URL.revokeObjectURL(img.dataset.localUrl); delete img.dataset.localUrl; }
+  img.removeAttribute('src');
+  log('ref image cleared', 'dim');
+}
+async function doImage() {
+  const btn = document.getElementById('imgGo');
+  const n = Math.max(1, Math.min(4, parseInt(document.getElementById('imgN').value, 10) || 1));
+  const body = {
+    if_upload: true, sketch_to_render: document.getElementById('imgSketch').value === 'true',
+    t_pose: document.getElementById('imgTpose').value === 'true',
+    prompt: document.getElementById('imgPrompt').value.trim(),
+    model_version: document.getElementById('imgModel').value,
+    image_number: n, aspect_ratio: document.getElementById('imgAspect').value,
+  };
+  if (!body.prompt) { log('prompt 为空', 'warn'); return; }
+  const tid = document.getElementById('imgTemplate').value;
+  if (tid) body.template_id = tid;
+  if (IMG_REF) {
+    body.image = { bucket: IMG_REF.bucket, key: IMG_REF.key,
+                   image_audit_result: IMG_REF.audit_result || 'pass', image_source: 'upload' };
+  }
+  btn.disabled = true;
+  document.getElementById('imgStatus').textContent = '提交中...';
+  const r = await api('/v1/studio/image/gen_image_v2', { method: 'POST', body });
+  btn.disabled = false;
+  if (r.status !== 200) {
+    document.getElementById('imgStatus').textContent = '失败：' + errMsg(r);
+    log('gen failed: ' + errMsg(r), 'err');
+    return;
+  }
+  const aid = r.body.data.asset_id, task = r.body.data.task_id;
+  document.getElementById('imgStatus').textContent = '已提交 task_id=' + task + '，轮询中...';
+  log('image submitted: ' + task + ' (' + n + ' 张, 预计 ' + (n * 10) + ' credits' + (IMG_REF ? ', 带参考图 ' + IMG_REF.key : '') + ')', 'ok');
+  await pollImage(aid);
+}
+async function pollImage(aid) {
+  for (let i = 0; i < 90; i++) {
+    await sleep(4000);
+    const r = await api('/v1/studio/image/get_image_asset', { method: 'POST', body: { asset_id: aid } });
+    if (r.status !== 200) continue;
+    const d = r.body.data || {};
+    if (d.status === 'success') {
+      const items = ((d.output || {}).data) || [];
+      document.getElementById('imgStatus').textContent = '完成 ' + items.length + ' 张';
+      renderGallery(items, aid);
+      loadImageAssets();
+      return;
+    }
+    if (d.status === 'failed') { document.getElementById('imgStatus').textContent = '任务失败'; return; }
+    document.getElementById('imgStatus').textContent = '生成中... status=' + d.status;
+  }
+  document.getElementById('imgStatus').textContent = '轮询超时';
+}
+function renderGallery(items, aid) {
+  const g = document.getElementById('imgGallery');
+  items.forEach((it, i) => {
+    const f = document.createElement('figure');
+    const fname = (it.key || ('image_' + i)).split('/').pop();
+    f.innerHTML = '<img src="' + esc(it.url) + '" loading="lazy" alt="">' +
+      '<figcaption><span title="' + esc(it.key || '') + '">' + esc(fname) + '</span>' +
+      '<a class="link" href="' + dlUrl('image', aid) + '" target="_blank">下载</a>' +
+      '<a class="link" onclick="copyFreshUrl(\'image\',\'' + aid + '\')" style="margin-left:6px" href="javascript:void(0)">复制链接</a>' +
+      '</figcaption>';
+    g.prepend(f);
+  });
+  log('image ready: ' + items.length + ' file(s), asset=' + aid, 'ok');
+}
+async function loadImageAssets() {
+  const r = await api('/v1/studio/image/image_assets', { method: 'POST', body: { page_num: 1, page_size: 20 } });
+  const rows = [];
+  const list = (r.body && r.body.data && r.body.data.assets) || [];
+  list.forEach(a => {
+    const st = a.status || 'unknown';
+    const tag = st === 'success' ? 'tag-succeeded' : (st === 'failed' ? 'tag-failed' : 'tag-running');
+    const aid = a.asset_id || a.id || '';
+    rows.push('<tr><td class="mono">' + esc(a.create_time || a.created_at || '-') + '</td>' +
+      '<td class="mono">' + esc((a.input || {}).model_version || '-') + '</td>' +
+      '<td>' + esc(((a.input || {}).prompt_text || '').slice(0, 70)) + '</td>' +
+      '<td>' + (aid
+        ? '<span class="tag ' + tag + '">' + st + '</span> ' +
+          '<a class="link" href="' + dlUrl('image', aid) + '" target="_blank">下载</a>'
+        : '<span class="tag ' + tag + '">' + st + '</span>') + '</td></tr>');
+  });
+  document.getElementById('imgAssetBody').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" class="empty">暂无</td></tr>';
+}
+
+/* ---------- 3D ---------- */
+function parseImgRef(v) {
+  v = (v || '').trim();
+  if (!v) return null;
+  if (/^https?:\/\//.test(v)) {
+    const m = v.match(/\/([^/]+)\/([^/?]+)$/);
+    return { bucket: 'tripo-data', key: m ? m[1] + '/' + m[2] : v, url: v };
+  }
+  return { bucket: 'tripo-data', key: v.replace(/^tripo-data\//, '') };
+}
+async function do3d() {
+  const btn = document.getElementById('d3Go');
+  const img = parseImgRef(document.getElementById('d3Img').value);
+  if (!img) { log('输入图不能为空', 'warn'); return; }
+  if (img.url) {
+    const au = await api('/v1/studio/audit/image', { method: 'POST', body: { image: { bucket: img.bucket, key: img.key } } });
+    if (au.status === 200 && au.body.data) img.image_audit_result = au.body.data.image_audit_result || 'pass';
+  }
+  const body = {
+    face_limit: parseInt(document.getElementById('d3Face').value, 10) || 2000000,
+    quad: document.getElementById('d3Quad').value === 'true',
+    visibility: 'public',
+    model_version: document.getElementById('d3Model').value,
+    generate_parts: false, smart_poly: false,
+    texture: document.getElementById('d3Tex').value === 'true',
+    delight: false, pbr: document.getElementById('d3Tex').value === 'true',
+    texture_alignment: 'original_image', texture_quality: 'detailed',
+    enable_image_autofix: false, geometry_quality: document.getElementById('d3Geo').value,
+    image: Object.assign({ image_source: 'upload' }, img),
+  };
+  btn.disabled = true;
+  document.getElementById('d3Status').textContent = '提交中...';
+  const r = await api('/v1/studio/operation/image_to_model', { method: 'POST', body });
+  btn.disabled = false;
+  if (r.status !== 200) {
+    document.getElementById('d3Status').textContent = '失败：' + errMsg(r);
+    log('3D submit failed: ' + errMsg(r), 'err');
+    return;
+  }
+  const op = r.body.data.operator_id || r.body.data.task_id;
+  const pid = r.body.data.project_id || r.body.data.asset_id;
+  state.cur3d = { op, pid };
+  log('3D submitted: operator=' + op + ' project=' + pid + ' (55 credits, ~5.5min)', 'ok');
+  document.getElementById('d3Status').textContent = '已提交 operator_id=' + op;
+  if (document.getElementById('d3Wait').value === 'true') { showProg(true); await poll3d(op, pid); }
+  else { loadAssets(); }
+}
+function showProg(on) { document.getElementById('d3ProgressWrap').style.display = on ? 'block' : 'none'; }
+async function poll3d(op0, pid) {
+  const op = op0;
+  for (let i = 0; i < 200; i++) {
+    await sleep(8000);
+    const r = await api('/v1/studio/progress', { method: 'POST', body: { ids: [op] } });
+    if (r.status !== 200) continue;
+    const d = (r.body.data || [])[0] || {};
+    const pct = d.progress || 0;
+    document.getElementById('d3Bar').style.width = pct + '%';
+    document.getElementById('d3ProgPct').textContent = pct + '%';
+    document.getElementById('d3ProgLabel').textContent = 'status=' + (d.status || '?') + (d.left_time != null ? ' · left ' + d.left_time + 's' : '');
+    if (d.status === 'success') {
+      document.getElementById('d3Status').textContent = '完成，正在取产物...';
+      const det = await api('/v2/studio/project/detail/v3/' + pid + '?locale=zh-CN', { method: 'GET' });
+      const p = (det.body.data && (det.body.data.project || det.body.data)) || {};
+      const op = (p.operator || {}).operator_id || op0;
+      if (op) {
+        document.getElementById('d3Status').innerHTML =
+          '完成 · <a class="link" href="' + dlUrl('model3d', op) + '" target="_blank">下载 GLB</a>' +
+          ' · <a class="link" href="javascript:void(0)" onclick="copyFreshUrl(\'model3d\',\'' + op + '\',\'GLB 链接\')">复制链接</a>' +
+          (p.model_url ? '' : ' (云端暂未返回 model_url，稍后在产物页重试)');
+        log('3D success: operator=' + op, 'ok');
+      } else {
+        document.getElementById('d3Status').textContent = '完成，但未取到 operator_id，请在产物页查看';
+      }
+      showProg(false); loadAssets(); loadOverview();
+      return;
+    }
+    if (d.status === 'failed') { document.getElementById('d3Status').textContent = '任务失败'; showProg(false); return; }
+    if (pct >= 99) document.getElementById('d3ProgLabel').textContent += ' · 贴图烘焙中，可能再等 1-2 分钟';
+  }
+  document.getElementById('d3Status').textContent = '轮询超时（可稍后在资产页查看）';
+  showProg(false);
+}
+
+/* ---------- 资产 ---------- */
+async function loadAssets() {
+  const r = await api('/v1/studio/assets/v2?asset_type=mine&locale=zh-CN&offset=0&size=50&type=all', { method: 'GET' });
+  if (r.status !== 200) { document.getElementById('allAssetBody').innerHTML = '<tr><td colspan="5" class="empty">加载失败：' + esc(errMsg(r)) + '</td></tr>'; return; }
+  const d = r.body.data || {};
+  const showPreset = document.getElementById('assetShowPreset').checked;
+  const all = d.projects || [];
+  const mine = showPreset ? all : all.filter(p => (p.type || '') !== 'preset');
+  const presetN = all.length - mine.length;
+  document.getElementById('assetCount').textContent = mine.length + ' / ' + (d.max_assets || '?') +
+    (presetN ? ' (+' + presetN + ' 预置已隐藏)' : '');
+  const rows = mine.map(p => {
+    const o = p.operator || {};
+    const itm = o.image_to_model || {};
+    const st = o.status || 'unknown';
+    const tag = st === 'success' ? 'tag-succeeded' : (st === 'failed' ? 'tag-failed' : 'tag-running');
+    const url = p.model_url || '';
+    const opid = o.operator_id || '';
+    return '<tr><td>' + esc(p.project_name || '(未命名)') + '</td>' +
+      '<td><span class="tag ' + (p.type === 'preset' ? 'tag-free' : 'tag-3d') + '">' + esc(p.type || '-') + '</span></td>' +
+      '<td class="mono">' + esc(itm.model_version || o.model_version || '-') + '</td>' +
+      '<td><span class="tag ' + tag + '">' + st + '</span></td>' +
+      '<td>' + (opid
+        ? '<a class="link" href="' + dlUrl('model3d', opid) + '" target="_blank">GLB</a>' +
+          ' <a class="link" href="javascript:void(0)" onclick="copyFreshUrl(\'model3d\',\'' + opid + '\',\'GLB 链接\')">复制</a>'
+        : '<span class="dim">' + (url ? '无 operator_id' : '-') + '</span>') + '</td></tr>';
+  });
+  const empty = '<tr><td colspan="5" class="empty">' + (mine.length ? '' : (presetN ? '仅剩预置模型，勾选「显示预置」查看' : '暂无资产')) + '</td></tr>';
+  document.getElementById('allAssetBody').innerHTML = rows.length ? rows.join('') : empty;
+  document.getElementById('assetBody').innerHTML = rows.length ? rows.join('') : empty;
+}
+
+/* ---------- 价格 ---------- */
+const PLAN_CN = { basic:'Basic（免费）', professional:'Professional', professional_6k:'Professional 6K',
+  professional_12k:'Professional 12K', premium:'Premium（旗舰）', team:'Team',
+  professional_annually:'Professional · 年付', professional_6k_annually:'Professional 6K · 年付',
+  professional_12k_annually:'Professional 12K · 年付', premium_annually:'Premium · 年付', team_annually:'Team · 年付' };
+async function loadPricing() {
+  const r = await api('/v1/studio/wm-billing/prices/list', { method: 'POST', body: {} });
+  if (r.status !== 200) { document.getElementById('priceBody').innerHTML = '<tr><td colspan="6" class="empty">加载失败：' + esc(errMsg(r)) + '</td></tr>'; return; }
+  const d = r.body.data || {};
+  document.getElementById('priceRegion').textContent = 'region: ' + (d.region || '?');
+  const rows = (d.prices || []).map(p => {
+    const usd = (p.prices || []).find(x => x.currency === 'USD') || {};
+    const cny = (p.prices || []).find(x => x.currency === 'CNY') || {};
+    const money = (o) => o.current_price && o.current_price !== '0' ? (o.current_price + (o.original_price && o.original_price !== o.current_price ? ' <s style="color:var(--muted)">' + o.original_price + '</s>' : '')) : '—';
+    const per = usd.unit2credits && parseFloat(usd.unit2credits) > 0 ? (Math.round(parseFloat(usd.unit2credits)) + ' c/$') : '—';
+    return '<tr><td>' + (PLAN_CN[p.product_name] || esc(p.product_name)) + '</td>' +
+      '<td><span class="pill">' + esc(p.product_cycle_type) + '</span></td>' +
+      '<td>' + money(usd) + '</td><td>' + money(cny) + '</td><td>' + per + '</td>' +
+      '<td>' + (p.product_name === 'basic' ? '<span class="tag tag-free">当前计划</span>' : '<span class="tag tag-pro">需订阅</span>') + '</td></tr>';
+  });
+  document.getElementById('priceBody').innerHTML = rows.join('');
+  document.getElementById('priceNote').textContent = '价格来自官方接口 /v2/studio/wm-billing/prices/list（region=US，含首期折扣）。c/$ = 每 1 美元可得 credits 数（unit2credits = credits / 1 USD）。';
+}
+
+/* ---------- 账号池 ---------- */
+function fmtTime(ts) {
+  if (!ts) return '-';
+  return new Date(ts * 1000).toLocaleString('zh-CN', { hour12: false });
+}
+function fmtLeft(ts) {
+  if (!ts) return '-';
+  const s = Math.floor(ts - Date.now() / 1000);
+  if (s <= 0) return '已过期';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? (h + 'h' + m + 'm') : (m + 'm');
+}
+async function captureAccount() {
+  const btn = document.getElementById('capGo');
+  const st = document.getElementById('capStatus');
+  const port = document.getElementById('cdpPort').value || '9366';
+  btn.disabled = true; st.textContent = '捕获中...';
+  log('capture: 连接 CDP 127.0.0.1:' + port, 'info');
+  const r = await api('/v1/accounts/capture', { method: 'POST', body: { port: parseInt(port, 10) || 9366 } });
+  btn.disabled = false;
+  if (r.status === 200 && r.body.ok) {
+    const a = r.body.account || {};
+    st.innerHTML = '<span class="ok">已加入：' + esc(a.email || a.label) + '</span>';
+    log('capture ok: ' + (a.email || a.label) + ' (kratos 到期 ' + (a.kratos_expires || '?') + ')', 'ok');
+    loadAccounts();
+  } else {
+    st.innerHTML = '<span class="err">失败：' + esc(errMsg(r)) + '</span>';
+    log('capture failed: ' + errMsg(r), 'err');
+  }
+}
+let accLoading = false;
+async function loadAccounts() {
+  if (accLoading) return;
+  accLoading = true;
+  loadKeepAlive();
+  const r = await api('/v1/accounts', { method: 'GET' });
+  accLoading = false;
+  const list = (r.body && r.body.data) || [];
+  document.getElementById('accCount').textContent = list.length + ' 个';
+  if (!list.length) {
+    document.getElementById('accBody').innerHTML = '<tr><td colspan="9" class="empty">账号池为空 — 上方「从 9366 Chrome 捕获登录态」</td></tr>';
+    document.getElementById('accNote').textContent = '';
+    return;
+  }
+  const rows = list.map((a, i) => {
+    const okTag = a.ok ? 'tag-succeeded' : 'tag-failed';
+    const jwtTag = a.jwt_expired ? 'tag-failed' : 'tag-free';
+    const jwtTxt = a.jwt_expired ? '已过期' : fmtLeft(a.jwt_exp);
+    const quota = [];
+    if (a.quota_smart_mesh != null) quota.push('SM' + a.quota_smart_mesh);
+    if (a.quota_uv_edit != null) quota.push('UV' + a.quota_uv_edit);
+    return '<tr>' +
+      '<td><span class="tag ' + okTag + '">' + (i + 1) + '</span></td>' +
+      '<td class="mono" style="cursor:pointer" onclick="copyText(\'' + esc(a.email || a.sub || '') + '\',\'标识\')" title="点击复制">' + esc(a.email || (a.sub || '').slice(0, 16) || a.label || '-') + '</td>' +
+      '<td>' + esc(a.plan || '-') + (a.free_trial ? ' <span class="tag tag-free">trial</span>' : '') + '</td>' +
+      '<td><b style="color:var(--green)">' + (a.credits != null ? a.credits : '-') + '</b>' +
+        (a.expiring_credit != null && a.expiring_credit !== a.credits ? '<div style="font-size:11px;color:var(--yellow)">' + a.expiring_credit + ' 将过期</div>' : '') + '</td>' +
+      '<td class="mono">' + esc(a.expiring_date || '-') + '</td>' +
+      '<td>' + (quota.length ? quota.join(' · ') : '<span class="dim">-</span>') + '</td>' +
+      '<td class="mono">' + (a.assets != null ? (a.assets + '/' + (a.assets_max || '?')) : '-') + '</td>' +
+      '<td><span class="tag ' + jwtTag + '">' + jwtTxt + '</span></td>' +
+      '<td>' +
+        '<button class="btn btn-outline btn-sm" onclick="renewOneJwt(\'' + esc(a.sub || a.email) + '\')">续签</button> ' +
+        '<button class="btn btn-outline btn-sm" onclick="refreshOneAccount(\'' + esc(a.sub || a.email) + '\')">刷新</button> ' +
+        '<button class="btn btn-outline btn-sm" onclick="removeAccount(\'' + esc(a.sub || a.email) + '\')">删除</button>' +
+      '</td></tr>';
+  });
+  document.getElementById('accBody').innerHTML = rows.join('');
+  const inv = list.map(a => a.invite_code).filter(Boolean);
+  document.getElementById('accNote').innerHTML =
+    '会话说明：Kratos session 30 天 · JWT 15 分钟（过期前服务层自动续签）。' +
+    (inv.length ? ' 邀请码：<span class="mono">' + esc(inv.join(', ')) + '</span>' : '') +
+    ' 当前代理使用池内第一个账号，请求头 <span class="mono">x-tripo-account</span> 可指定。';
+}
+async function loadKeepAlive() {
+  const r = await api('/v1/keepalive/status', { method: 'GET' });
+  const k = (r.body && r.body) || {};
+  const rows = [
+    ['状态', k.enabled ? '<span class="ok">运行中</span>' : '<span class="warn">已禁用</span>'],
+    ['已执行轮次', (k.runs || 0) + ' 次 / 运行 ' + Math.round((k.uptime_s || 0) / 60) + ' 分钟'],
+    ['JWT 检查间隔', (k.jwt_interval_s || '-') + 's（剩余 &lt; ' + (k.jwt_ahead_s || '-') + 's 时提前续签）'],
+    ['额度刷新间隔', (k.credit_interval_s || '-') + 's'],
+    ['session 预警阈值', '&lt; ' + (k.warn_days || '-') + ' 天'],
+  ];
+  (k.accounts || []).forEach(a => {
+    const bad = a.fails ? '<span style="color:var(--red)">' + a.fails + ' 次失败: ' + esc(a.last_error || '') + '</span>' : '<span class="ok">正常</span>';
+    rows.push(['账号 ' + (a.sub || '').slice(0, 12),
+      'JWT 剩余 ' + (a.jwt_left_s != null ? Math.round(a.jwt_left_s / 60) + 'm' : '-') +
+      ' · ' + bad + (a.backoff_left_s ? ' · 退避 ' + a.backoff_left_s + 's' : '')]);
+  });
+  document.getElementById('kaKv').innerHTML = rows.map(r =>
+    '<span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span>').join('');
+}
+async function tickKeepAlive() {
+  log('keepalive: 手动触发一轮...', 'info');
+  const r = await api('/v1/keepalive/tick', { method: 'POST', body: {} });
+  if (r.body && r.body.ok) log('keepalive tick 完成（累计 ' + r.body.status.runs + ' 轮）', 'ok');
+  else log('keepalive tick 失败: ' + errMsg(r), 'err');
+  loadKeepAlive(); loadAccounts();
+}
+async function pollAccounts(silent) {
+  const btn = document.getElementById('accPollBtn');
+  if (btn) btn.disabled = true;
+  const r = await api('/v1/accounts/refresh-credits', { method: 'POST', body: {} });
+  if (btn) btn.disabled = false;
+  await loadAccounts();
+  const res = (r.body && r.body.results) || [];
+  const okc = res.filter(x => x.ok).length, renewed = res.filter(x => x.renewed).length;
+  if (!silent) log('accounts refreshed: ' + okc + '/' + res.length + ' ok' + (renewed ? ', ' + renewed + ' JWT 续签' : ''), okc ? 'ok' : 'err');
+}
+async function renewOneJwt(id) {
+  const r = await api('/v1/accounts/renew-jwt', { method: 'POST', body: { sub: id } });
+  if (r.body && r.body.ok) log('JWT renewed: ' + (r.body.renewed || []).join(', '), 'ok');
+  else log('JWT renew failed: ' + errMsg(r), 'err');
+  loadAccounts();
+}
+async function renewAllJwt() {
+  const r = await api('/v1/accounts/renew-jwt', { method: 'POST', body: {} });
+  if (r.body && r.body.ok) log('JWT renewed: ' + (r.body.renewed || []).join(', '), 'ok');
+  else log('JWT renew failed', 'err');
+  loadAccounts();
+}
+async function refreshOneAccount(id) {
+  const r = await api('/v1/accounts/renew-jwt', { method: 'POST', body: { sub: id } });
+  if (!(r.body && r.body.ok)) log('refresh: JWT 续签失败（Kratos session 可能已失效，需重新登录）', 'warn');
+  else log('refresh ok', 'ok');
+  loadAccounts();
+}
+async function removeAccount(id) {
+  if (!confirm('从账号池移除该账号？\n（不会删除浏览器里的登录态）')) return;
+  const r = await api('/v1/accounts/remove', { method: 'POST', body: { sub: id } });
+  log('account removed: ' + ((r.body && r.body.removed) || 0), 'warn');
+  loadAccounts();
+}
+async function exportAccounts() {
+  const r = await api('/v1/accounts/export', { method: 'GET' });
+  const blob = new Blob([JSON.stringify(r.body, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tripo2api-accounts-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  log('accounts exported (' + ((r.body && r.body.count) || 0) + ')', 'ok');
+}
+function copyText(txt, what) {
+  if (!txt) return;
+  navigator.clipboard.writeText(txt).then(() => log('copied ' + (what || 'text'), 'dim'), e => log('copy failed: ' + e.message, 'err'));
+}
+
+/* ---------- 账号池资产（跨账号聚合） ---------- */
+let POOL_ASSETS = { accounts: [], projects: [], totals: {} };
+
+function acctChip(email, sub, plan) {
+  const short = (email || sub || '?').split('@')[0];
+  return '<span class="chip" title="' + esc(email || sub || '') + ' · ' + esc(plan || '') + '">' +
+    '<b>' + esc(short) + '</b>' +
+    (plan ? '<span class="pill">' + esc(plan) + '</span>' : '') + '</span>';
+}
+async function exportPoolAssets() {
+  const r = await api('/v1/pool/assets/export', { method: 'GET' });
+  const blob = new Blob([JSON.stringify(r.body, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tripo2api-pool-assets-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  log('pool assets exported (' + ((r.body && r.body.totals && r.body.totals.projects) || 0) + ')', 'ok');
+}
+
+/* ---------- 产物仓库 ---------- */
+
+/* ---------- 历史（SQLite） ---------- */
+function fmtDt(ts) {
+  if (!ts) return '-';
+  return new Date(ts * 1000).toLocaleString('zh-CN', { hour12: false });
+}
+function stTag(s) {
+  const c = s === 'success' ? 'tag-succeeded' : (s === 'failed' ? 'tag-failed' : 'tag-running');
+  return '<span class="tag ' + c + '">' + esc(s || '-') + '</span>';
+}
+async function backfillImages() {
+  log('backfill: 拉取云端 image_assets...', 'info');
+  const r = await api('/v1/db/images/backfill?pages=5', { method: 'GET' });
+  const b = r.body || {};
+  if (b.ok) {
+    log('backfill done: +' + b.added + ' 新增, ' + b.updated + ' 更新 (库内 ' + b.total_before + ' -> ' + b.total_after + ')', 'ok');
+  } else {
+    log('backfill failed: ' + errMsg(r), 'err');
+  }
+  loadArtifacts();
+}
+
+/* ---------- 启动 ---------- */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function init() {
+  MODELS_IMAGE.forEach(m => { const o = document.createElement('option'); o.value = m[0]; o.textContent = m[1] + (m[2] ? ' ✓' : ''); document.getElementById('imgModel').appendChild(o); });
+  MODELS_3D.forEach(m => { const o = document.createElement('option'); o.value = m[0]; o.textContent = m[1] + (m[2] ? ' ✓' : ''); document.getElementById('d3Model').appendChild(o); });
+  const saved = localStorage.getItem('imgPrompt');
+  if (saved) document.getElementById('imgPrompt').value = saved;
+  document.getElementById('imgPrompt').addEventListener('change', e => localStorage.setItem('imgPrompt', e.target.value));
+  log('console ready. base=' + (CFG.base || '(同源)'), 'dim');
+  loadModels();
+  loadOverview();
+  loadTemplates();
+  setTimeout(loadAccounts, 300);   // 预热，切页秒开
+  setTimeout(loadArtifacts, 600);  // 产物页预热
+  setTimeout(loadKeepAlive, 800); // 保活面板预热
+  setInterval(loadOverview, 60000);
+  setInterval(() => { if (document.visibilityState === 'visible' && document.getElementById('page-accounts').classList.contains('active')) loadAccounts(); }, 60000);
+  const p = localStorage.getItem('tripo2api.page');
+  if (p) switchPage(p);
+}
+init();
+</script>
+</body>
+</html>

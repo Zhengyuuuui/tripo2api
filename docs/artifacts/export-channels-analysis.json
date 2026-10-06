@@ -1,0 +1,55 @@
+{
+ "topic": "导出通道 vs 运行时 model_url —— 差异与影响",
+ "two_free_channels_confirmed": {
+  "A_project_detail": "GET /v2/studio/project/detail/v3/<project_id>?locale=zh-CN -> data.model_url (200, free)",
+  "B_download_with_name": "POST /v2/studio/operation/download_with_name {file_name, operator_id} -> data.model_url (200, free)"
+ },
+ "member_gated_confirmed": {
+  "export": "POST /v2/studio/operation/export {project_id,name,model_version,format,packaging} -> 403 6102 for ALL formats",
+  "export-lite": "POST /v2/studio/operation/export-lite {operator_id,project_id,format,is_owner} -> 403 6102",
+  "formats_tested": [
+   "glb",
+   "usd",
+   "fbx",
+   "obj",
+   "stl",
+   "3mf"
+  ]
+ },
+ "critical_finding_file_name_ignored": {
+  "claim": "download_with_name ignores the file_name extension entirely; always returns the same meshopt GLB",
+  "evidence": "6 calls with .glb/.stl/.obj/.fbx/.usdz/.3mf -> identical S3 key tripo_pbr_model_<opid>_meshopt.glb, identical 15,805,980 bytes, magic b'glTF' every time",
+  "implication": "file_name is a DISPLAY NAME, not a format request. There is NO free format-conversion path."
+ },
+ "answer_q1_same_as_member_download": {
+  "verdict": "GEOMETRY+TEXTURE: identical source artifact. FORMAT: different.",
+  "same": "The meshopt GLB IS the generated model's native stored form. Membership export would re-serialize this same mesh. Vertex data, UVs, PBR textures are not a degraded 'preview' version - 1,987,714 tris with 3 baked textures is the full product.",
+  "different": "Member export adds: format conversion (USD/FBX/OBJ/STL/3MF), packaging (embedded/zip), custom filename, texture_resolution selection (512/1K/2K/4K/8K), possibly Draco variants. All 403 for free.",
+  "practical_gap": "If your toolchain needs OBJ/FBX/STL (DCC interchange, 3D printing slicers) you must pay. GLB works for web/Blender/Unity/Unreal."
+ },
+ "answer_q3_which_software_affected": {
+  "extensions": [
+   "KHR_mesh_quantization",
+   "EXT_meshopt_compression"
+  ],
+  "bufferViews": "All 4 (pos/normal/uv/indices) use EXT_meshopt_compression; normals stored as normalized int8 (componentType 5120, quantized)",
+  "size_effect": "15.8MB compressed vs ~56MB raw float estimate => ~3.6x. Indices are UNSIGNED_INT 5125 (not quantized).",
+  "unaffected": [
+   "Blender >=3.0 (built-in meshopt)",
+   "three.js (MeshoptDecoder, ~30 lines)",
+   "Unity (GLTFast w/ meshopt)",
+   "Unreal Engine 5 (built-in)",
+   "Babylon.js",
+   "gltfpack/gltf-transform CLI",
+   "model-viewer",
+   "any tool w/ Khronos glTF-Validator"
+  ],
+  "affected": [
+   "Older Blender <3.0 - may fail to load or drop meshes",
+   "Software using raw glTF spec only (no extension support) - e.g. some older three.js <r120, some web viewers",
+   "Naive glTF parsers that ignore extensionsRequired - silently read empty buffers (this is the dangerous failure mode)",
+   "3D-printing slicers (PrusaSlicer/Cura) - they do NOT support glTF extensions well and cannot read meshopt; must convert to STL/OBJ first => this is where membership actually bites"
+  ],
+  "how_to_convert_free": "gltf-transform CLI: gltf-transform optimize --compress meshopt in.glb out.glb  (or decode to uncompressed: gltf-transform copy in.glb out.glb). No Tripo membership involved, local processing."
+ }
+}
